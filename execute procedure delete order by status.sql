@@ -1,0 +1,1 @@
+EXEC DeleteOrdersByStatus 0

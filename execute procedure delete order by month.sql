@@ -1,0 +1,1 @@
+EXEC DeleteOrdersByMonth 3

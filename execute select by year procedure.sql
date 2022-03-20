@@ -1,0 +1,1 @@
+EXEC GetOrdersByYear 2022
