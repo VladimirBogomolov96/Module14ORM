@@ -14,9 +14,10 @@ namespace Module14.Tests
         // Here should be a test database, but in this task there is no reason to create a separate one for testing
         private const string testConnectionString = "Server=(localdb)\\mssqllocaldb;Database=Module13;Trusted_Connection=True;";
 
-        private readonly OrderRepository orderRepository = new OrderRepository();
-
-        private readonly ProductRepository productRepository = new ProductRepository();
+        private OrderRepository orderRepository;
+        private ProductRepository productRepository;
+        private Module13Context productContext;
+        private Module13Context orderContext;
 
         private readonly Order[] initialOrders = new Order[]
         {
@@ -50,12 +51,17 @@ namespace Module14.Tests
         [TestInitialize]
         public async Task Setup()
         {
+            this.productContext = new Module13Context();
+            this.orderContext = new Module13Context();
+            this.productRepository = new ProductRepository(this.productContext);
+            this.orderRepository = new OrderRepository(this.orderContext);
+
             foreach (Product product in this.initialProducts)
             {
                 await this.productRepository.InsertProductAsync(product);
             }
 
-            List<Product> products = this.productRepository.GetProducts();
+            List<Product> products = this.productRepository.GetProducts().ToList();
 
             for (int i = 0; i < products.Count; i++)
             {
@@ -73,13 +79,16 @@ namespace Module14.Tests
         {
             await this.orderRepository.DeleteAllOrdersAsync();
             await this.productRepository.DeleteAllProductsAsync();
+
+            await this.productContext.DisposeAsync();
+            await this.orderContext.DisposeAsync();
         }
 
         [TestMethod]
         public void GetOrders_ReturnsExpectedOrders()
         {
             // Act
-            List<Order> actual = this.orderRepository.GetOrders();
+            List<Order> actual = this.orderRepository.GetOrders().ToList();
 
             // Assert
             Assert.AreEqual(this.initialOrders.Length, actual.Count);
@@ -146,7 +155,7 @@ namespace Module14.Tests
         public void GetOrdersByMonth_ReturnsCorrectOrders(int monthNumber, int expectedOrdersNumber)
         {
             // Act
-            List<Order> orders = this.orderRepository.GetOrdersByMonth(monthNumber);
+            List<Order> orders = this.orderRepository.GetOrdersByMonth(monthNumber).ToList();
 
             // Assert
             Assert.AreEqual(expectedOrdersNumber, orders.Count);
@@ -159,7 +168,7 @@ namespace Module14.Tests
         public void GetOrdersByStatus_ReturnsCorrectOrders(OrderStatus orderStatus, int expectedOrdersNumber)
         {
             // Act
-            List<Order> orders = this.orderRepository.GetOrdersByStatus(orderStatus);
+            List<Order> orders = this.orderRepository.GetOrdersByStatus(orderStatus).ToList();
 
             // Assert
             Assert.AreEqual(expectedOrdersNumber, orders.Count);
@@ -172,7 +181,7 @@ namespace Module14.Tests
         public void GetOrdersByYear_ReturnsCorrectOrders(int year, int expectedOrdersNumber)
         {
             // Act
-            List<Order> orders = this.orderRepository.GetOrdersByYear(year);
+            List<Order> orders = this.orderRepository.GetOrdersByYear(year).ToList();
 
             // Assert
             Assert.AreEqual(expectedOrdersNumber, orders.Count);
@@ -182,7 +191,7 @@ namespace Module14.Tests
         public void GetOrdersByProductId_NotExistingProductId_ReturnsZeroOrders()
         {
             // Act
-            List<Order> orders = this.orderRepository.GetOrdersByProductId(-5);
+            List<Order> orders = this.orderRepository.GetOrdersByProductId(-5).ToList();
 
             // Assert
             Assert.AreEqual(0, orders.Count);
@@ -195,7 +204,7 @@ namespace Module14.Tests
             Order order = this.GetOrders().Result.Last();
 
             // Act
-            List<Order> orders = this.orderRepository.GetOrdersByProductId(order.ProductId);
+            List<Order> orders = this.orderRepository.GetOrdersByProductId(order.ProductId).ToList();
 
             // Assert
             Assert.IsTrue(orders.Any(ord => this.AreOrdersEqual(ord, order)));

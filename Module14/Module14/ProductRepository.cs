@@ -8,17 +8,22 @@ namespace Module14
 {
     public class ProductRepository
     {
+        private readonly Module13Context context;
+
+        public ProductRepository(Module13Context context)
+        {
+            this.context = context;
+        }
+
         public async Task InsertProductAsync(Product product)
         {
-            using Module13Context context = new Module13Context();
-            await context.AddAsync(product);
-            await context.SaveChangesAsync();
+            await this.context.AddAsync(product);
+            await this.context.SaveChangesAsync();
         }
 
         public async Task UpdateProductByNameAsync(string name, Product product)
         {
-            using Module13Context context = new Module13Context();
-            Product productToUpdate = context.Products.First(pr => pr.Name == name);
+            Product productToUpdate = this.context.Products.First(pr => pr.Name == name);
 
             productToUpdate.Name = product.Name;
             productToUpdate.Description = product.Description;
@@ -27,28 +32,25 @@ namespace Module14
             productToUpdate.Height = product.Height;
             productToUpdate.Length = product.Length;
 
-            await context.SaveChangesAsync();
+            await this.context.SaveChangesAsync();
         }
 
         public async Task DeleteProductByNameAsync(string name)
         {
-            using Module13Context context = new Module13Context();
-            Product productToDelete = context.Products.First(pr => pr.Name == name);
-            context.Products.Remove(productToDelete);
-            await context.SaveChangesAsync();
+            Product productToDelete = this.context.Products.First(pr => pr.Name == name);
+            this.context.Products.Remove(productToDelete);
+            await this.context.SaveChangesAsync();
         }
 
         public async Task DeleteAllProductsAsync()
         {
-            using Module13Context context = new Module13Context();
-            context.Products.RemoveRange(context.Products);
-            await context.SaveChangesAsync();
+            this.context.Products.RemoveRange(context.Products);
+            await this.context.SaveChangesAsync();
         }
 
-        public List<Product> GetProducts()
+        public IEnumerable<Product> GetProducts()
         {
-            using Module13Context context = new Module13Context();
-            return context.Products.ToList();
+            return this.context.Products.ToList();
         }
     }
 }

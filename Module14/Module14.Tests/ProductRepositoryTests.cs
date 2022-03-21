@@ -12,7 +12,8 @@ namespace Module14.Tests
         // Here should be a test database, but in this task there is no reason to create a separate one for testing
         private const string testConnectionString = "Server=(localdb)\\mssqllocaldb;Database=Module13;Trusted_Connection=True;";
 
-        private readonly ProductRepository productRepository = new ProductRepository();
+        private ProductRepository productRepository;
+        private Module13Context context;
 
         private readonly Product[] initialProducts = new Product[]
         {
@@ -24,6 +25,9 @@ namespace Module14.Tests
         [TestInitialize]
         public async Task Setup()
         {
+            this.context = new Module13Context();
+            this.productRepository = new ProductRepository(this.context);
+
             foreach (Product product in this.initialProducts)
             {
                 await this.productRepository.InsertProductAsync(product);
@@ -34,13 +38,14 @@ namespace Module14.Tests
         public async Task CleanUp()
         {
             await this.productRepository.DeleteAllProductsAsync();
+            await this.context.DisposeAsync();
         }
 
         [TestMethod]
         public void GetProducts_ReturnsExpectedProducts()
         {
             // Act
-            List<Product> actual = this.productRepository.GetProducts();
+            List<Product> actual = this.productRepository.GetProducts().ToList();
 
             // Assert
             Assert.AreEqual(this.initialProducts.Length, actual.Count);
